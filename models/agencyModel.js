@@ -22,6 +22,12 @@ const agencySchema = new mongoose.Schema(
     photo: {
       type: String,
     },
+    country: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
     location: {
       type: String,
     },

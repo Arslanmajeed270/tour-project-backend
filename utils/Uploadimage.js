@@ -23,7 +23,7 @@ exports.uploadUserPhoto = upload.single("profilePhoto");
 
 exports.uploadAgencyPhoto = upload.fields([
   { name: "profilePhoto", maxCount: 1 },
-  { name: "documents", maxCount: 3 },
+  { name: "documents", maxCount: 5 },
 ]);
 
 exports.uploadTourPhoto = upload.fields([
@@ -48,7 +48,7 @@ exports.resizeUserPhoto = async (req, res, next) => {
   req.file.path = `uploads/${req.file.filename}`;
 
   const url = await uploadUtil.Upload("user", req.file.path, req.file.filename);
-  req.body.Photo = url;
+  req.body.photo = url;
 
   next();
 };
@@ -103,7 +103,9 @@ exports.resizeTourImages = catchAsync(async (req, res, next) => {
 
 // Handle agency profile images
 exports.handleAgencyImages = catchAsync(async (req, res, next) => {
-  if (!req.files.profilePhoto || !req.files.documents) return next();
+  if (!req.files.profilePhoto && !req.files.documents) {
+    return next();
+  }
 
   // 1) Cover image
   req.files.profilePhoto[0].filename = `agency-${Date.now()}-cover`;
@@ -116,7 +118,7 @@ exports.handleAgencyImages = catchAsync(async (req, res, next) => {
   req.files.profilePhoto[0].path = `uploads/agency/${req.files.profilePhoto[0].filename}`;
   // // 2) Images
 
-  const images = [];
+  const documents = [];
 
   await Promise.all(
     req.files.documents.map(async (file, i) => {
@@ -127,12 +129,30 @@ exports.handleAgencyImages = catchAsync(async (req, res, next) => {
         .toFile(`uploads/agency/${filename}`);
       file.filename = filename;
       file.path = `uploads/agency/${filename}`;
-      images.push(file);
+      documents.push(file);
     })
   );
 
-  req.body.profilePhoto = req.files.profilePhoto[0];
-  req.body.images = images;
+  const profilePhoto = req.files.profilePhoto[0];
+  const document = documents;
+
+  let url = await uploadUtil.Upload(
+    "agency",
+    profilePhoto.path,
+    profilePhoto.filename
+  );
+
+  const imagesUrl = [];
+
+  await Promise.all(
+    document.map(async (file, i) => {
+      const url = await uploadUtil.Upload("agency", file.path, file.filename);
+      imagesUrl.push(url);
+    })
+  );
+
+  req.body.photo = url;
+  req.body.document = imagesUrl;
 
   next();
 });

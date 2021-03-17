@@ -1,20 +1,26 @@
 const mongoose = require("mongoose");
-var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var bodyParser = require("body-parser");
 const morgan = require("morgan");
-var Database = require("./config");
 const firebase = require("firebase");
 const helmet = require("helmet");
 const cors = require("cors");
+
 const globalErrorHandler = require("./controllers/errorController");
 var usersRouter = require("./routes/userRoutes");
 var agencyRouter = require("./routes/agencyRoute");
 var tourRouter = require("./routes/tourRoute");
 var reviewRouter = require("./routes/reviewRoutes");
+var bookingRouter = require("./routes/bookingRoute");
+var homeRouter = require("./routes/homeRoute");
 const AppError = require("./utils/appError");
+
+require("dotenv").config();
+
+const swaggerUi = require("swagger-ui-express");
+const swaggerFile = require("./swagger_output.json");
 
 var app = express();
 
@@ -39,10 +45,14 @@ app.options("*", cors());
 // Set security HTTP headers
 app.use(helmet());
 
-app.use("/users", usersRouter);
+app.use("/user", usersRouter);
 app.use("/agency", agencyRouter);
-app.use("/agency/tour", tourRouter);
-app.use("/users/tour", reviewRouter);
+app.use("/tour", tourRouter);
+app.use("/user/tour", reviewRouter);
+app.use("/user/booking", bookingRouter);
+app.use("/home", homeRouter);
+
+app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
 // catch 404 and forward to error handler
 app.all("*", (req, res, next) => {
@@ -64,7 +74,7 @@ var firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-const connect = mongoose.connect(Database.URL, {
+const connect = mongoose.connect(process.env.Database, {
   keepAlive: true,
   useNewUrlParser: true,
   useCreateIndex: true,

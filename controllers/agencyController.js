@@ -2,30 +2,11 @@ const Agency = require("../models/agencyModel");
 const catchAsync = require("../utils/catchAsync");
 const uploadUtil = require("../utils/cloudinary");
 const factory = require("./handlerFactory");
+const AppError = require("../utils/appError");
 
 // works
 exports.updateAgencyProfile = async (req, res, next) => {
-  const { profilePhoto, images } = req.body;
-
-  let url = await uploadUtil.Upload(
-    "agency",
-    profilePhoto.path,
-    profilePhoto.filename
-  );
-
-  const imagesUrl = [];
-
-  await Promise.all(
-    images.map(async (file, i) => {
-      const url = await uploadUtil.Upload("agency", file.path, file.filename);
-      imagesUrl.push(url);
-    })
-  );
-
-  req.body.photo = url;
-  req.body.document = imagesUrl;
-
-  const doc = await Agency.findOneAndUpdate({ uid: req.params.id }, req.body, {
+  const doc = await Agency.findOneAndUpdate(req.params.id, req.body, {
     new: true,
   });
 

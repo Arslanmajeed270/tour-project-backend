@@ -5,6 +5,7 @@ const User = require("./../models/userModel");
 const catchAsync = require("./../utils/catchAsync");
 const AppError = require("./../utils/appError");
 const CustomFirebase = require("../utils/FirbaseFunctions");
+const Agency = require("../models/agencyModel");
 
 require("dotenv").config();
 
@@ -15,8 +16,7 @@ const signToken = (id) => {
 };
 
 const createSendToken = (user, statusCode, req, res) => {
-  console.log("create Token " + user.id);
-  const token = signToken(user.id);
+  const token = signToken(user._id);
 
   res.cookie("jwt", token, {
     expires: new Date(
@@ -42,7 +42,15 @@ exports.signup = catchAsync(async (req, res, next) => {
     return next(new AppError("Please provide email and password!", 400));
   }
 
-  await CustomFirebase.FirebasesignUp(role, email, password, name, next);
+  const user = await CustomFirebase.FirebasesignUp(
+    role,
+    email,
+    password,
+    name,
+    next
+  );
+
+  createSendToken(user, 200, req, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -87,9 +95,15 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // 2) Verification token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
   // 3) Check if user still exists
-  const currentUser = await User.findById(decoded.id);
+  const role = req.headers.role;
+  let currentUser;
+  if (role == "user") {
+    currentUser = await User.findById(decoded.id);
+  } else {
+    currentUser = await Agency.findById(decoded.id);
+  }
+
   if (!currentUser) {
     return next(
       new AppError(

@@ -5,10 +5,13 @@ const fileUpload = require("../utils/Uploadimage");
 
 const router = express.Router();
 
-router.post("/signup", authController.signup);
+router.post("/register", authController.signup);
 router.post("/login", authController.login);
+router.post("/verify/:id", userController.verifyUser);
 
 router.use(authController.protect);
+
+router.get("/booking", userController.checkBooking);
 
 router.patch(
   "/profile/:id",
@@ -16,6 +19,8 @@ router.patch(
   fileUpload.resizeUserPhoto,
   userController.updateUserProfile
 );
+
+router.post("/contact-us", userController.contactUs);
 
 // router.get('/logout', authController.logout);
 

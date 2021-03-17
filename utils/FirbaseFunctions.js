@@ -11,21 +11,19 @@ const FirebasesignIn = async (role, email, password, next) => {
       .auth()
       .signInWithEmailAndPassword(email, password);
 
-    if (user.user.emailVerified == false) {
-      return next(new AppError("Please Verify email", 400));
-    } else if (user.user.emailVerified == true && role == "user") {
+    if (role == "user") {
       const DbUser = await User.findOne({ uid: user.user.uid });
       return DbUser;
-    } else if (user.user.emailVerified == true && role == "agency") {
+    } else if (role == "agency") {
       const DbUser = await Agency.findOne({ uid: user.user.uid });
       return DbUser;
     } else {
-      next(new AppError("Unkonwn Error", 400));
+      return next(new AppError("Unkonwn Error", 400));
     }
   } catch (error) {
-    var errorCode = error.code;
+    var errorCode = 400;
     var errorMessage = error.message;
-    next(new AppError(errorMessage, errorCode));
+    return next(new AppError(errorMessage, errorCode));
   }
   // [END auth_signin_password]
 };
@@ -37,19 +35,28 @@ const FirebasesignUp = async (role, email, password, name, next) => {
       .createUserWithEmailAndPassword(email, password);
 
     if (role == "user") {
-      user = await userController.createUser(user.user.uid, user.user.email);
-    } else {
-      user = await agencyController.CreateAgency(
+      const newUser = await userController.createUser(
         user.user.uid,
-        user.user.email,
+        email,
         name
       );
+
+      console.log(newUser);
+      return newUser;
+    } else {
+      const newUser = await agencyController.CreateAgency(
+        user.user.uid,
+        email,
+        name
+      );
+      console.log(newUser);
+      return newUser;
     }
-    sendEmailVerification();
+    // sendEmailVerification();
   } catch (error) {
     var errorCode = error.code;
     var errorMessage = error.message;
-    next(new AppError(errorMessage, errorCode));
+    return next(new AppError(errorMessage, errorCode));
   }
 };
 
