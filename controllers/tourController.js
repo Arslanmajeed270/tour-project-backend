@@ -56,3 +56,5 @@ exports.createDiscountTour = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.filterTour = factory.getAll(Tour);

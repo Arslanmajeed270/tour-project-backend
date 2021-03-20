@@ -30,13 +30,15 @@ router
   )
   .delete(authController.restrictTo("agency"), tourController.deleteTour);
 
-router.get("/tours", tourController.getAgencyTours).post(
-  "/tour",
-  // authController.restrictTo("agency"),
-  fileUpload.uploadTourPhoto,
-  fileUpload.resizeTourImages,
-  tourController.createTour
-);
+router
+  .get("/tours", tourController.getAgencyTours)
+  .post(
+    "/tour",
+    authController.restrictTo("agency"),
+    fileUpload.uploadTourPhoto,
+    fileUpload.resizeTourImages,
+    tourController.createTour
+  );
 
 router.route("/tour/discount-tour").post(tourController.createDiscountTour);
 
